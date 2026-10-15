@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>GradUp — مشروع تخرجك، شركتك الناشئة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --teal-900:#0A3F44; --teal-700:#0F5C63; --teal-500:#157A83;
+  --teal-100:#EAF3F4; --teal-050:#F4F9FA;
+  --amber-500:#F2A93B; --amber-100:#FDF3E1; --amber-700:#B8791F;
+  --ink-900:#1B1F23; --ink-600:#5B6770; --ink-400:#8A949C;
+  --line-300:#D5DCE0; --line-200:#E6EBEE;
+  --surface:#FFFFFF; --canvas:#F6F3EC;
+  --ok:#15803D; --warn:#C2410C; --bad:#B91C1C; --violet:#6D28D9;
+  --shadow-xs:0 1px 2px rgba(27,31,35,.06);
+  --shadow-sm:0 2px 6px rgba(27,31,35,.07);
+  --shadow-md:0 8px 20px rgba(27,31,35,.08);
+  --shadow-lg:0 18px 40px rgba(27,31,35,.14);
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-xl:24px; --r-pill:999px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --font:"Cairo","Tajawal",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font); background:var(--canvas); color:var(--ink-900);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--teal-700);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px var(--teal-100),0 0 0 5px var(--teal-700);
+  border-radius:8px;
+}
+[hidden]{display:none !important}
+
+/* ============ LAYOUT ============ */
+.app{min-height:100vh;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px;background:rgba(255,255,255,.85);
+  backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid transparent;transition:border-color .2s var(--ease);
+}
+.topbar.scrolled{border-bottom-color:var(--line-200)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--teal-700)}
+.brand-mark{
+  width:32px;height:32px;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal-700),var(--teal-500));
+  display:grid;place-items:center;color:#fff;font-weight:700;
+}
+.spacer{flex:1}
+.icon-btn{
+  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  color:var(--ink-600);position:relative;transition:background .15s var(--ease),color .15s var(--ease);
+}
+.icon-btn:hover{background:var(--teal-100);color:var(--teal-700)}
+.icon-btn .dot{
+  position:absolute;top:8px;inset-inline-end:8px;min-width:18px;height:18px;padding:0 4px;
+  background:var(--amber-500);color:#1B1F23;font-size:11px;font-weight:700;
+  border-radius:999px;display:grid;place-items:center;border:2px solid #fff;
+}
+.lang{
+  display:flex;background:var(--teal-100);border-radius:var(--r-pill);padding:3px;
+}
+.lang button{
+  padding:6px 12px;border-radius:var(--r-pill);font-size:13px;font-weight:600;
+  color:var(--teal-700);transition:background .15s var(--ease),color .15s var(--ease);
+}
+.lang button.active{background:var(--teal-700);color:#fff}
+
+/* Sidebar + main */
+.shell{flex:1;display:grid;grid-template-columns:1fr;max-width:1440px;width:100%;margin:0 auto;padding:0 20px 40px;gap:24px}
+@media(min-width:1024px){.shell{grid-template-columns:240px 1fr}}
+.sidebar{display:none}
+@media(min-width:1024px){
+  .sidebar{display:flex;flex-direction:column;gap:4px;position:sticky;top:88px;align-self:start}
+  .sidebar a{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;
+    color:var(--ink-600);font-weight:600;text-decoration:none;position:relative;
+    transition:background .15s var(--ease),color .15s var(--ease);
+  }
+  .sidebar a:hover{background:var(--teal-050);color:var(--teal-700);text-decoration:none}
+  .sidebar a.active{background:var(--teal-100);color:var(--teal-700)}
+  .sidebar a.active::before{
+    content:"";position:absolute;inset-inline-start:-8px;top:10px;bottom:10px;
+    width:3px;border-radius:3px;background:var(--teal-700);
+  }
+}
+main{min-width:0;display:flex;flex-direction:column;gap:24px}
+
+/* ============ COMPONENTS ============ */
+.card{
+  background:var(--surface);border:1px solid var(--line-200);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--shadow-xs);
+}
+.card.amber{background:var(--amber-100);border-color:#F2DFB4}
+.card.tint{background:var(--teal-050);border-color:var(--teal-100)}
+.card h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.card p{color:var(--ink-600);font-size:14px}
+.card .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 18px;border-radius:12px;font-weight:600;font-size:15px;
+  transition:transform .15s var(--ease),box-shadow .2s var(--ease),background .15s var(--ease);
+  white-space:nowrap;
+}
+.btn-primary{background:var(--teal-700);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--teal-500);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{background:#fff;color:var(--teal-700);border:1.5px solid var(--line-300)}
+.btn-secondary:hover{border-color:var(--teal-700);background:var(--teal-050)}
+.btn-ghost{background:transparent;color:var(--teal-700)}
+.btn-ghost:hover{background:var(--teal-100)}
+.btn-danger{background:var(--bad);color:#fff}
+.btn-danger:hover{background:#9c1717}
+.btn-accent{background:var(--amber-500);color:#1B1F23}
+.btn-accent:hover{background:#e29b2c}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none !important}
+.btn.sm{min-height:36px;padding:0 14px;font-size:14px}
+.btn.block{width:100%}
+
+.badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  font-size:12px;font-weight:700;line-height:1.6;
+}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9}
+.badge.draft{background:#EEF1F3;color:var(--ink-600)}
+.badge.submitted{background:var(--teal-100);color:var(--teal-700)}
+.badge.review{background:var(--amber-100);color:var(--amber-700)}
+.badge.changes{background:#FEE6D6;color:var(--warn)}
+.badge.approved{background:#DCFCE7;color:var(--ok)}
+.badge.mentoring{background:var(--teal-100);color:var(--teal-700)}
+.badge.published{background:#DCFCE7;color:var(--ok)}
+.badge.funded{background:#EDE9FE;color:var(--violet)}
+.badge.rejected{background:#FEE2E2;color:var(--bad)}
+.badge.pending{background:var(--amber-100);color:var(--amber-700)}
+.badge.accepted{background:#DCFCE7;color:var(--ok)}
+.badge.declined{background:#FEE2E2;color:var(--bad)}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field label{font-size:14px;font-weight:600;color:var(--ink-900)}
+.field .hint{font-size:12px;color:var(--ink-600)}
+.field input,.field select,.field textarea{
+  min-height:44px;padding:10px 14px;border:1.5px solid var(--line-300);
+  border-radius:12px;background:#fff;transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+.field textarea{min-height:100px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--teal-700);box-shadow:0 0 0 3px var(--teal-100);
+}
+.field.error input,.field.error select,.field.error textarea{border-color:var(--bad)}
+.field .err{font-size:12px;color:var(--bad);display:flex;gap:6px;align-items:center}
+.field .ok{font-size:12px;color:var(--ok)}
+
+/* Stepper */
+.stepper{display:flex;gap:8px;background:var(--surface);border:1px solid var(--line-200);
+  border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-xs);overflow-x:auto}
+.step{flex:1;min-width:120px;display:flex;flex-direction:column;gap:8px;position:relative}
+.step .bar{height:6px;border-radius:999px;background:var(--line-200);overflow:hidden}
+.step .bar>span{display:block;height:100%;width:0;background:var(--teal-700);transition:width .5s var(--ease)}
+.step.done .bar>span{width:100%}
+.step.current .bar>span{width:100%;background:var(--amber-500)}
+.step .label{font-size:13px;font-weight:600;color:var(--ink-600);display:flex;align-items:center;gap:6px}
+.step.done .label{color:var(--teal-700)}
+.step.current .label{color:var(--amber-700)}
+.step .num{
+  display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+  background:var(--line-200);font-size:11px;color:var(--ink-600);font-weight:700;
+}
+.step.done .num{background:var(--teal-700);color:#fff}
+.step.current .num{background:var(--amber-500);color:#1B1F23;animation:pulse 1.6s var(--ease) infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(242,169,59,.55)}50%{box-shadow:0 0 0 8px rgba(242,169,59,0)}}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;gap:2px;position:relative;padding-inline-start:28px}
+.timeline::before{content:"";position:absolute;inset-inline-start:9px;top:8px;bottom:8px;width:2px;background:var(--line-200)}
+.tl-item{position:relative;padding:10px 0}
+.tl-item::before{
+  content:"";position:absolute;inset-inline-start:-28px;top:16px;width:20px;height:20px;
+  border-radius:50%;background:var(--teal-700);border:3px solid #fff;box-shadow:0 0 0 1px var(--line-200);
+}
+.tl-item.pending::before{background:var(--line-300)}
+.tl-item h4{font-size:15px;font-weight:700;margin-bottom:2px}
+.tl-item p{font-size:13px;color:var(--ink-600)}
+
+/* Project cards grid */
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:720px){.grid.cols-2{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.grid.cols-3{grid-template-columns:repeat(3,1fr)}}
+.project-card{
+  display:flex;flex-direction:column;gap:12px;text-align:start;
+  background:#fff;border:1px solid var(--line-200);border-radius:var(--r-lg);
+  padding:18px;box-shadow:var(--shadow-xs);transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease);
+}
+.project-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--teal-100)}
+.project-card h4{font-size:17px;font-weight:700}
+.project-card .meta{font-size:13px;color:var(--ink-600);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:var(--teal-100);color:var(--teal-700);font-size:12px;font-weight:600;
+}
+
+/* File list */
+.file{
+  display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line-200);
+  border-radius:12px;margin-bottom:8px;background:#fff;
+}
+.file .fico{width:36px;height:36px;border-radius:10px;background:var(--teal-100);display:grid;place-items:center;color:var(--teal-700);font-weight:700;font-size:12px}
+.file .fname{font-weight:600;font-size:14px}
+.file .fsize{font-size:12px;color:var(--ink-600)}
+.file select{border:1px solid var(--line-300);border-radius:8px;padding:6px 8px;font-size:12px}
+
+.dropzone{
+  border:2px dashed var(--line-300);border-radius:var(--r-lg);padding:32px 20px;
+  text-align:center;background:var(--teal-050);transition:border-color .2s var(--ease),background .2s var(--ease),transform .2s var(--ease);
+  cursor:pointer;
+}
+.dropzone.dragover{border-color:var(--teal-700);background:var(--teal-100);transform:scale(1.01)}
+.dropzone p{color:var(--ink-600);font-size:14px;margin-top:8px}
+
+/* Chat */
+.chat{display:flex;flex-direction:column;gap:12px;max-height:360px;overflow-y:auto;padding:8px}
+.bubble{max-width:78%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;box-shadow:var(--shadow-xs)}
+.bubble.them{background:#fff;border:1px solid var(--line-200);align-self:flex-start;border-start-start-radius:4px}
+.bubble.me{background:var(--teal-700);color:#fff;align-self:flex-end;border-start-end-radius:4px}
+.bubble .time{display:block;font-size:11px;opacity:.7;margin-top:4px}
+.chat-input{display:flex;gap:8px;margin-top:12px}
+.chat-input input{flex:1;min-height:44px;padding:10px 14px;border:1.5px solid var(--line-300);border-radius:12px}
+.chat-input input:focus{outline:none;border-color:var(--teal-700);box-shadow:0 0 0 3px var(--teal-100)}
+
+/* Modal */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(27,31,35,.45);backdrop-filter:blur(4px);
+  display:grid;place-items:center;z-index:100;padding:20px;
+  animation:fadeIn .2s var(--ease);
+}
+.modal{
+  background:#fff;border-radius:var(--r-lg);padding:24px;max-width:480px;width:100%;
+  box-shadow:var(--shadow-lg);animation:pop .25s var(--ease-spring);
+}
+.modal h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.modal p{color:var(--ink-600);margin-bottom:20px}
+.modal .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+
+/* Toast */
+.toasts{position:fixed;bottom:20px;inset-inline-start:20px;display:flex;flex-direction:column;gap:10px;z-index:200;max-width:360px}
+.toast{
+  background:#fff;border:1px solid var(--line-200);border-radius:12px;padding:12px 16px;
+  box-shadow:var(--shadow-md);display:flex;gap:10px;align-items:center;font-size:14px;
+  animation:slideIn .25s var(--ease-spring);
+}
+.toast .ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;flex-shrink:0}
+.toast.success .ico{background:var(--ok)}
+.toast.error .ico{background:var(--bad)}
+.toast.info .ico{background:var(--teal-700)}
+.toast.warn .ico{background:var(--amber-500);color:#1B1F23}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Notifications drawer */
+.drawer{
+  position:fixed;top:0;inset-inline-start:0;height:100vh;width:min(400px,90vw);
+  background:#fff;z-index:100;box-shadow:var(--shadow-lg);
+  display:flex;flex-direction:column;animation:drawerIn .25s var(--ease);
+}
+@keyframes drawerIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+.drawer header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line-200)}
+.drawer .list{flex:1;overflow-y:auto;padding:8px}
+.notif{display:flex;gap:12px;padding:12px;border-radius:12px}
+.notif:hover{background:var(--teal-050)}
+.notif .dot{width:8px;height:8px;border-radius:50%;background:var(--amber-500);margin-top:6px;flex-shrink:0}
+.notif.unread{background:var(--teal-050)}
+.notif .title{font-weight:600;font-size:14px}
+.notif .sub{font-size:12px;color:var(--ink-600)}
+
+/* Empty state */
+.empty{text-align:center;padding:48px 20px;color:var(--ink-600)}
+.empty svg{margin-bottom:16px}
+.empty h3{color:var(--ink-900);margin-bottom:6px}
+
+/* Hero */
+.hero{
+  display:grid;gap:24px;align-items:center;
+  background:
+    radial-gradient(60% 60% at 30% 10%,var(--teal-100),transparent 70%),
+    radial-gradient(50% 50% at 90% 90%,var(--amber-100),transparent 70%),
+    var(--surface);
+  border:1px solid var(--line-200);border-radius:var(--r-xl);padding:32px 24px;
+  box-shadow:var(--shadow-sm);
+}
+@media(min-width:900px){.hero{grid-template-columns:1.15fr .85fr;padding:48px}}
+.hero h1{font-size:clamp(28px,4.4vw,44px);line-height:1.25;font-weight:700;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--teal-700);position:relative}
+.hero h1 em::after{content:"";position:absolute;inset-inline:0;bottom:2px;height:8px;background:rgba(242,169,59,.35);border-radius:4px;z-index:-1}
+.hero p{color:var(--ink-600);font-size:17px;margin-bottom:24px;max-width:52ch}
+.hero .actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero-art{display:grid;place-items:center}
+
+/* Steps / sections */
+.section-title{font-size:22px;font-weight:700;margin:8px 0}
+.section-sub{color:var(--ink-600);margin-bottom:16px}
+
+.steps{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:720px){.steps{grid-template-columns:repeat(3,1fr)}}
+.step-card{
+  background:#fff;border:1px solid var(--line-200);border-radius:var(--r-lg);padding:20px;
+  box-shadow:var(--shadow-xs);transition:transform .2s var(--ease),box-shadow .2s var(--ease);
+}
+.step-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.step-card .n{
+  width:36px;height:36px;border-radius:12px;background:var(--teal-100);color:var(--teal-700);
+  display:grid;place-items:center;font-weight:700;margin-bottom:12px;
+}
+.step-card h4{font-size:17px;font-weight:700;margin-bottom:6px}
+.step-card p{font-size:14px;color:var(--ink-600)}
+
+.sectors{display:flex;gap:8px;flex-wrap:wrap}
+.sector{
+  padding:8px 14px;border-radius:999px;border:1.5px solid var(--line-300);
+  background:#fff;font-size:14px;font-weight:600;color:var(--ink-600);
+  transition:all .15s var(--ease);
+}
+.sector:hover{border-color:var(--teal-700);color:var(--teal-700)}
+.sector.active{background:var(--teal-700);color:#fff;border-color:var(--teal-700)}
+
+.investor-band{
+  background:linear-gradient(135deg,var(--teal-900),var(--teal-700));
+  color:#fff;border-radius:var(--r-xl);padding:32px 24px;
+  display:grid;gap:16px;align-items:center;
+}
+@media(min-width:720px){.investor-band{grid-template-columns:1fr auto;padding:40px}}
+.investor-band h2{font-size:24px;font-weight:700;margin-bottom:6px}
+.investor-band p{opacity:.85;font-size:15px}
+.investor-band .btn-accent{min-height:48px;padding:0 22px;font-weight:700}
+
+footer.site{
+  margin-top:32px;padding:32px 20px 20px;border-top:1px solid var(--line-200);
+  background:var(--surface);color:var(--ink-600);font-size:14px;
+}
+footer.site .cols{display:grid;gap:24px;grid-template-columns:1fr;max-width:1440px;margin:0 auto 24px}
+@media(min-width:720px){footer.site .cols{grid-template-columns:repeat(4,1fr)}}
+footer.site h5{color:var(--ink-900);font-size:14px;font-weight:700;margin-bottom:10px}
+footer.site a{display:block;color:var(--ink-600);padding:4px 0}
+footer.site .bottom{max-width:1440px;margin:0 auto;padding-top:20px;border-top:1px solid var(--line-200);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+/* Skeletons */
+.skel{background:linear-gradient(90deg,#EEF1F3 0%,#F7F9FA 40%,#EEF1F3 80%);background-size:200% 100%;animation:shimmer 1.4s linear infinite;border-radius:8px}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.skel-card{height:140px}
+.skel-line{height:12px;margin:8px 0}
+
+/* Autosave */
+.autosave{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-600)}
+.autosave .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber-500);animation:pulse 1.2s infinite}
+.autosave.saved .pulse{background:var(--ok);animation:none}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--teal-050);border-radius:12px;width:fit-content;flex-wrap:wrap}
+.tabs button{padding:8px 14px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-600);transition:background .15s var(--ease),color .15s var(--ease)}
+.tabs button.active{background:#fff;color:var(--teal-700);box-shadow:var(--shadow-xs)}
+
+/* NDA lock */
+.locked{
+  position:relative;border:1px solid var(--line-200);border-radius:var(--r-lg);overflow:hidden;
+  background:linear-gradient(180deg,#fff,#FAFCFC);padding:24px;text-align:center;
+}
+.locked .blur{filter:blur(6px);user-select:none;opacity:.5}
+.locked .overlay{
+  position:absolute;inset:0;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.92));
+  padding:24px;text-align:center;
+}
+.locked .overlay p{max-width:44ch;margin:0 auto;color:var(--ink-600);font-size:14px}
+
+/* Utilities */
+.muted{color:var(--ink-600)}
+.small{font-size:13px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:16px}
+.flow>*+*{margin-top:16px}
+.center{text-align:center}
+.mono{font-family:"Cairo",monospace;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar" id="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="القائمة" hidden>☰</button>
+    <a class="brand" href="#" onclick="go('home');return false" aria-label="GradUp">
+      <span class="brand-mark">G</span><span>GradUp</span>
+    </a>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="bellBtn" aria-label="الإشعارات" hidden>
+      🔔<span class="dot" id="bellCount">2</span>
+    </button>
+    <div class="lang" role="group" aria-label="اللغة">
+      <button data-lang="ar" class="active" type="button">ع</button>
+      <button data-lang="en" type="button">EN</button>
+    </div>
+    <button class="icon-btn" id="userBtn" aria-label="الحساب" hidden>👤</button>
+  </header>
+
+  <!-- ============ SHELL ============ -->
+  <div class="shell">
+    <nav class="sidebar" id="sidebar" aria-label="التنقل"></nav>
+    <main id="main" aria-live="polite"></main>
+  </div>
+
+  <footer class="site" id="footer">
+    <div class="cols">
+      <div>
+        <div class="brand" style="margin-bottom:12px"><span class="brand-mark">G</span><span>GradUp</span></div>
+        <p>حاضنة أعمال افتراضية لطلاب وخريجي الهندسة والتكنولوجيا في مصر.</p>
+      </div>
+      <div>
+        <h5>المنصة</h5>
+        <a href="#" onclick="go('pitch');return false">تصفّح المشاريع</a>
+        <a href="#" onclick="go('register');return false">سجّل كمستثمر</a>
+        <a href="#">القطاعات</a>
+      </div>
+      <div>
+        <h5>المساعدة</h5>
+        <a href="#">الأسئلة الشائعة</a>
+        <a href="#">تواصل معنا</a>
+        <a href="#">سياسة الخصوصية</a>
+      </div>
+      <div>
+        <h5>تابعنا</h5>
+        <a href="#">LinkedIn</a>
+        <a href="#">X</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 GradUp. جميع الحقوق محفوظة.</span>
+      <span>صُنع في القاهرة 🇪🇬</span>
+    </div>
+  </footer>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+<div id="drawerRoot"></div>
+
+<script>
+/* ============================================================
+   GRADUP PROTOTYPE — state machine + router + i18n + screens
+   ============================================================ */
+
+/* ---------- i18n ---------- */
+const STR = {
+  ar: {
+    upload:"رفع", screening:"فرز", mentoring:"إرشاد", pitch:"عرض",
+    dashboard:"لوحتي", project:"مشروعي", messages:"الرسائل", documents:"المستندات",
+    meetings:"الاجتماعات", settings:"الإعدادات", review:"المراجعة", canvas:"نموذج العمل",
+    pitchBoard:"لوحة العروض", admin:"الإدارة", users:"المستخدمون",
+    tagline:"مشروع تخرجك، شركتك الناشئة.",
+    heroSub:"منصة حاضنة أعمال افتراضية لطلاب الهندسة والتكنولوجيا في مصر. ارفع مشروع تخرجك، احصل على إرشاد، واعرضه على المستثمرين.",
+    register:"سجّل الآن", browse:"تصفّح المشاريع",
+    howItWorks:"ثلاث خطوات", howSub:"من مشروع تخرج إلى شركة ناشئة.",
+    s1:"ارفع مشروعك", s1d:"ارفع مستندات مشروعك وحدّد القطاع ومستوى الجاهزية.",
+    s2:"احصل على إرشاد", s2d:"يعمل معك مرشد خبير على نموذج العمل والخطوات التالية.",
+    s3:"اعرض على المستثمرين", s3d:"انشر مشروعك واعرضه على المستثمرين والشركات.",
+    sectorsTitle:"القطاعات", sectorsSub:"اختر القطاع لتصفية المشاريع.",
+    forInvestors:"للمستثمرين والشركات",
+    forInvestorsSub:"اكتشف مشاريع جاهزة للاستثمار والاحتضان من أفضل طلاب الهندسة والتكنولوجيا.",
+    joinInvestor:"انضم كمستثمر",
+    nextStep:"الخطوة التالية",
+    mentorMsgs:"رسائل المرشد",
+    yourDocs:"المستندات",
+    recentProjects:"مشاريع مميزة",
+    filterEmpty:"لا توجد مشاريع مطابقة للفلاتر.",
+    resetFilters:"إعادة تعيين الفلاتر",
+    searchPlaceholder:"ابحث عن مشروع أو قطاع…",
+    requestMeeting:"طلب اجتماع",
+    viewProject:"عرض المشروع",
+    ndaLocked:"تُفتح المستندات الكاملة بعد موافقة الفريق وتوقيعك على اتفاقية السرية.",
+    ndaCheck:"أوافق على اتفاقية السرية",
+    publicSummary:"الملخص العام",
+    fullDocs:"المستندات الكاملة",
+    projectDetails:"تفاصيل المشروع",
+    summary:"الملخص",
+    title:"عنوان المشروع",
+    sector:"القطاع",
+    readiness:"مستوى الجاهزية",
+    next:"التالي", back:"رجوع", submit:"إرسال للمراجعة",
+    confirmTitle:"هل أنت متأكد؟",
+    confirmBody:"بعد الإرسال لا يمكنك تعديل المشروع حتى تُراجَع.",
+    confirmYes:"نعم، أرسل", confirmNo:"إلغاء",
+    cancel:"إلغاء", save:"حفظ", delete:"حذف",
+    statusDraft:"مسودة", statusSubmitted:"تم الإرسال", statusReview:"قيد المراجعة",
+    statusChanges:"تعديل مطلوب", statusApproved:"مقبول", statusMentoring:"إرشاد",
+    statusPublished:"منشور", statusFunded:"مموّل", statusRejected:"مرفوض",
+    timeline:"الجدول الزمني",
+    submittedEvt:"تم الإرسال", reviewedEvt:"قيد المراجعة",
+    mentorEvt:"تم تعيين مرشد", publishedEvt:"تم النشر",
+    accept:"قبول", decline:"رفض", pending:"قيد الانتظار",
+    accepted:"مقبول", declined:"مرفوض",
+    sendMsg:"اكتب رسالتك…", send:"إرسال",
+    autosaveIdle:"", autosaveSaving:"يتم الحفظ…", autosaveSaved:"تم الحفظ",
+    loginTitle:"تسجيل الدخول", registerTitle:"إنشاء حساب",
+    name:"الاسم", email:"البريد الإلكتروني", password:"كلمة المرور",
+    university:"الجامعة", faculty:"الكلية", gradYear:"سنة التخرج",
+    registerNote:"التسجيل متاح لطلاب وخريجي كليات الهندسة والتكنولوجيا فقط.",
+    alreadyAccount:"لدي حساب بالفعل", noAccount:"ليس لدي حساب",
+    loginBtn:"تسجيل الدخول", registerBtn:"إنشاء حساب",
+    uploadStep1:"التفاصيل", uploadStep2:"المستندات", uploadStep3:"المراجعة والإرسال",
+    dropzone:"اسحب الملفات هنا أو اضغط للاختيار",
+    dropzoneHint:"PDF أو DOCX — الحد الأقصى 25 ميجابايت",
+    visibility:"الظهور", visPublic:"ملخص عام", visPrivate:"خاص", visNda:"اتفاقية سرية",
+    addDoc:"أضف مستند",
+    reviewerQueue:"قائمة الفرز",
+    projectCol:"المشروع", sectorCol:"القطاع", dateCol:"تاريخ الإرسال", statusCol:"الحالة", actionsCol:"إجراء",
+    reviewBtn:"مراجعة",
+    feedback:"ملاحظات المراجع",
+    approve:"موافقة", requestChanges:"طلب تعديلات", reject:"رفض",
+    approveBtn:"إرسال القرار",
+    meetingReqs:"طلبات الاجتماع",
+    all:"الكل", pendingTab:"قيد الانتظار", acceptedTab:"مقبول", declinedTab:"مرفوض",
+    notifTitle:"الإشعارات", markRead:"تحديد الكل كمقروء",
+    notifEmpty:"لا توجد إشعارات.",
+    hello:"مرحبًا", resetDemo:"إعادة تعيين العرض",
+    projectLabel:"مشروع", mentor:"المرشد",
+    nextAddDoc:"أضف مستندات إضافية لطلب المراجعة",
+    nextComplete:"أكمل بيانات مشروعك",
+    nextWait:"لا إجراء مطلوب، سنُعلمك عند اكتمال المراجعة",
+    nextMentor:"ابدأ العمل مع مرشدك",
+    nextPublish:"انشر مشروعك للمستثمرين",
+    nextShare:"شارك مشروعك لجذب المستثمرين",
+    openChat:"افتح المحادثة",
+    stageCurrent:"المرحلة الحالية",
+    docPublic:"ملخص", docPrivate:"خاص", docNda:"NDA",
+    ready1:"مبكر", ready2:"نموذج", ready3:"جاهز", ready4:"مكتمل",
+    searchBySector:"القطاع", searchByReady:"الجاهزية",
+    emptyPitch:"لا توجد مشاريع مطابقة للفلاتر.",
+    emptyNotif:"لا توجد إشعارات.",
+    requestFunding:"طلب تمويل", requestIncubation:"طلب احتضان",
+    adminUsers:"إدارة المستخدمين", adminSectors:"إدارة القطاعات",
+    adminMentors:"تعيين المرشدين", adminEvents:"فعاليات العرض",
+    publish:"انشر المشروع",
+    seedStudent:"سارة أحمد", seedMentor:"م. أحمد فؤاد",
+    demo:"نسخة تجريبية", welcomeBack:"أهلًا بعودتك، سارة 👋"
+  },
+  en: {
+    upload:"Upload", screening:"Screening", mentoring:"Mentoring", pitch:"Pitch",
+    dashboard:"Dashboard", project:"My project", messages:"Messages", documents:"Documents",
+    meetings:"Meetings", settings:"Settings", review:"Review", canvas:"Business model",
+    pitchBoard:"Pitch board", admin:"Admin", users:"Users",
+    tagline:"Your graduation project, your startup.",
+    heroSub:"A virtual business incubator for engineering and technology students in Egypt. Upload your graduation project, get mentored, and pitch it to investors.",
+    register:"Register", browse:"Browse projects",
+    howItWorks:"Three steps", howSub:"From graduation project to startup.",
+    s1:"Upload your project", s1d:"Upload your project documents, pick a sector, and set its readiness level.",
+    s2:"Get mentored", s2d:"A senior mentor works with you on the business model and next steps.",
+    s3:"Pitch to investors", s3d:"Publish your project and pitch it to investors and companies.",
+    sectorsTitle:"Sectors", sectorsSub:"Pick a sector to filter projects.",
+    forInvestors:"For investors & companies",
+    forInvestorsSub:"Discover investment-ready projects built by Egypt's top engineering students.",
+    joinInvestor:"Join as investor",
+    nextStep:"Next step",
+    mentorMsgs:"Mentor messages",
+    yourDocs:"Documents",
+    recentProjects:"Featured projects",
+    filterEmpty:"No projects match your filters.",
+    resetFilters:"Reset filters",
+    searchPlaceholder:"Search projects or sectors…",
+    requestMeeting:"Request meeting",
+    viewProject:"View project",
+    ndaLocked:"Full documents unlock after the team approves and you accept the NDA.",
+    ndaCheck:"I agree to the NDA",
+    publicSummary:"Public summary",
+    fullDocs:"Full documents",
+    projectDetails:"Project details",
+    summary:"Summary",
+    title:"Project title",
+    sector:"Sector",
+    readiness:"Readiness level",
+    next:"Next", back:"Back", submit:"Submit for review",
+    confirmTitle:"Are you sure?",
+    confirmBody:"After submitting, you can't edit the project until it's reviewed.",
+    confirmYes:"Yes, submit", confirmNo:"Cancel",
+    cancel:"Cancel", save:"Save", delete:"Delete",
+    statusDraft:"Draft", statusSubmitted:"Submitted", statusReview:"Under review",
+    statusChanges:"Changes requested", statusApproved:"Approved", statusMentoring:"Mentoring",
+    statusPublished:"Published", statusFunded:"Funded", statusRejected:"Rejected",
+    timeline:"Timeline",
+    submittedEvt:"Submitted", reviewedEvt:"Under review",
+    mentorEvt:"Mentor assigned", publishedEvt:"Published",
+    accept:"Accept", decline:"Decline", pending:"Pending",
+    accepted:"Accepted", declined:"Declined",
+    sendMsg:"Type your message…", send:"Send",
+    autosaveIdle:"", autosaveSaving:"Saving…", autosaveSaved:"Saved",
+    loginTitle:"Sign in", registerTitle:"Create account",
+    name:"Name", email:"Email", password:"Password",
+    university:"University", faculty:"Faculty", gradYear:"Graduation year",
+    registerNote:"Registration is limited to engineering and technology students and graduates.",
+    alreadyAccount:"I already have an account", noAccount:"I don't have an account",
+    loginBtn:"Sign in", registerBtn:"Create account",
+    uploadStep1:"Details", uploadStep2:"Documents", uploadStep3:"Review & submit",
+    dropzone:"Drag files here or click to choose",
+    dropzoneHint:"PDF or DOCX — max 25 MB",
+    visibility:"Visibility", visPublic:"Public summary", visPrivate:"Private", visNda:"NDA only",
+    addDoc:"Add document",
+    reviewerQueue:"Screening queue",
+    projectCol:"Project", sectorCol:"Sector", dateCol:"Submitted", statusCol:"Status", actionsCol:"Action",
+    reviewBtn:"Review",
+    feedback:"Reviewer feedback",
+    approve:"Approve", requestChanges:"Request changes", reject:"Reject",
+    approveBtn:"Submit decision",
+    meetingReqs:"Meeting requests",
+    all:"All", pendingTab:"Pending", acceptedTab:"Accepted", declinedTab:"Declined",
+    notifTitle:"Notifications", markRead:"Mark all as read",
+    notifEmpty:"No notifications.",
+    hello:"Hello", resetDemo:"Reset demo",
+    projectLabel:"Project", mentor:"Mentor",
+    nextAddDoc:"Add supporting documents for review",
+    nextComplete:"Complete your project details",
+    nextWait:"No action needed — we'll notify you when review completes",
+    nextMentor:"Start working with your mentor",
+    nextPublish:"Publish your project for investors",
+    nextShare:"Share your project to attract investors",
+    openChat:"Open chat",
+    stageCurrent:"Current stage",
+    docPublic:"Public", docPrivate:"Private", docNda:"NDA",
+    ready1:"Early", ready2:"Prototype", ready3:"Ready", ready4:"Complete",
+    searchBySector:"Sector", searchByReady:"Readiness",
+    emptyPitch:"No projects match your filters.",
+    emptyNotif:"No notifications.",
+    requestFunding:"Request funding", requestIncubation:"Request incubation",
+    adminUsers:"Users", adminSectors:"Sectors",
+    adminMentors:"Mentor assignment", adminEvents:"Pitch events",
+    publish:"Publish project",
+    seedStudent:"Sara Ahmed", seedMentor:"Ahmed Fouad",
+    demo:"Prototype", welcomeBack:"Welcome back, Sara 👋"
+  }
+};
+
+let LANG = localStorage.getItem("gradup.lang") || "ar";
+const t = (k) => (STR[LANG] && STR[LANG][k]) || k;
+
+/* ---------- Seed state ---------- */
+const STAGES = ["upload","screening","mentoring","pitch"];
+const SECTORS_AR = ["الذكاء الاصطناعي","الزراعة الذكية","الأنظمة المدمجة / إنترنت الأشياء","الأتمتة الصناعية","الاتصالات"];
+const SECTORS_EN = ["AI","Smart agriculture","Embedded systems / IoT","Industrial automation","Telecom"];
+
+const defaultState = () => ({
+  role: "student",
+  route: "home",
+  project: {
+    id: "p1",
+    title: LANG === "ar" ? "نظام ري ذكي بالطاقة الشمسية" : "Solar-powered smart irrigation",
+    sector: 1,
+    readiness: 2,
+    summary: LANG === "ar"
+      ? "نظام يعتمد على أجهزة استشعار رطوبة التربة ولوحة شمسية لترشيد استهلاك المياه في الأراضي الزراعية الصغيرة."
+      : "A system that uses soil-moisture sensors and a solar panel to optimize water usage on small farms.",
+    status: "draft", // draft|submitted|review|changes|approved|mentoring|published|funded|rejected
+    docs: [
+      {name:"public-summary.pdf", size:"1.2 MB", vis:"public"},
+      {name:"technical-doc.pdf", size:"4.6 MB", vis:"private"}
+    ]
+  },
+  stage: 0, // index into STAGES
+  messages: [
+    {from:"them", text: LANG === "ar" ? "راجع قسم السوق في نموذج العمل." : "Please review the market section in your business model.", time:"10:12"},
+    {from:"me",   text: LANG === "ar" ? "تمام، سأرفع النسخة المحدثة اليوم." : "Sure, I'll upload the updated version today.", time:"10:20"}
+  ],
+  notifications: [
+    {title: LANG === "ar" ? "مرشد جديد معيّن" : "New mentor assigned", sub: LANG === "ar" ? "م. أحمد فؤاد" : "Ahmed Fouad", unread:true},
+    {title: LANG === "ar" ? "تم استلام مشروعك" : "Your project was received", sub: LANG === "ar" ? "قبل ٢ ساعات" : "2 hours ago", unread:true}
+  ],
+  meetings: [],
+  filters: { q:"", sector:null, ready:null },
+  canvas: {
+    ar:["شرائح العملاء","القيمة المقترحة","القنوات","علاقات العملاء","مصادر الإيرادات","الموارد الرئيسية","الأنشطة الرئيسية","الشركاء الرئيسيون","هيكل التكاليف"],
+    en:["Customer segments","Value proposition","Channels","Customer relationships","Revenue streams","Key resources","Key activities","Key partners","Cost structure"]
+  },
+  canvasData: {}
+});
+
+let S = JSON.parse(localStorage.getItem("gradup.state.v1") || "null") || defaultState();
+const save = () => localStorage.setItem("gradup.state.v1", JSON.stringify(S));
+
+/* ---------- Router ---------- */
+const ROUTES = {
+  home: renderHome,
+  register: renderRegister,
+  login: renderLogin,
+  dashboard: renderDashboard,
+  upload: renderUpload,
+  project: renderProject,
+  review: renderReview,
+  reviewItem: renderReviewItem,
+  mentor: renderMentor,
+  canvas: renderCanvas,
+  pitch: renderPitch,
+  pitchItem: renderPitchItem,
+  meetings: renderMeetings,
+  admin: renderAdmin
+};
+
+function go(route, params={}){
+  S.route = route;
+  S.params = params;
+  save();
+  render();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function setRole(role){
+  S.role = role;
+  save();
+  go(role === "student" ? "dashboard" : role === "mentor" ? "mentor" : role === "reviewer" ? "review" : role === "investor" ? "pitch" : "admin");
+}
+
+/* ---------- Render ---------- */
+function render(){
+  // Topbar state
+  const authed = S.route !== "home" && S.route !== "register" && S.route !== "login";
+  document.getElementById("bellBtn").hidden = !authed;
+  document.getElementById("userBtn").hidden = !authed;
+  document.getElementById("menuBtn").hidden = true; // simplified
+  document.getElementById("bellCount").textContent = S.notifications.filter(n=>n.unread).length;
+  document.getElementById("bellCount").hidden = !S.notifications.some(n=>n.unread);
+  document.getElementById("footer").hidden = S.route !== "home";
+
+  // Sidebar
+  renderSidebar(authed);
+
+  // Main
+  const fn = ROUTES[S.route] || renderHome;
+  document.getElementById("main").innerHTML = fn();
+  attachHandlers();
+}
+
+function renderSidebar(authed){
+  const el = document.getElementById("sidebar");
+  if (!authed){ el.innerHTML = ""; return; }
+  const items = sidebarForRole(S.role);
+  el.innerHTML = items.map(i => `
+    <a href="#" data-route="${i.route}" class="${S.route===i.route?'active':''}">
+      <span aria-hidden="true">${i.icon}</span><span>${t(i.label)}</span>
+    </a>
+  `).join("") + `
+    <a href="#" data-route="__reset" style="margin-top:auto;color:var(--bad)">
+      <span aria-hidden="true">↻</span><span>${t("resetDemo")}</span>
+    </a>
+  `;
+  el.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", (e)=>{
+      e.preventDefault();
+      const r = a.dataset.route;
+      if (r === "__reset"){ resetDemo(); return; }
+      go(r);
+    });
+  });
+}
+
+function sidebarForRole(role){
+  if (role === "student") return [
+    {route:"dashboard", label:"dashboard", icon:"🏠"},
+    {route:"upload", label:"project", icon:"📦"},
+    {route:"mentor", label:"messages", icon:"💬"},
+    {route:"canvas", label:"canvas", icon:"🧩"},
+    {route:"meetings", label:"meetings", icon:"📅"},
+    {route:"project", label:"documents", icon:"📄"}
+  ];
+  if (role === "mentor") return [
+    {route:"mentor", label:"dashboard", icon:"🏠"},
+    {route:"meetings", label:"meetings", icon:"📅"}
+  ];
+  if (role === "reviewer") return [
+    {route:"review", label:"review", icon:"🔎"}
+  ];
+  if (role === "investor") return [
+    {route:"pitch", label:"pitchBoard", icon:"🚀"},
+    {route:"meetings", label:"meetings", icon:"📅"}
+  ];
+  return [
+    {route:"admin", label:"admin", icon:"⚙️"}
+  ];
+}
+
+/* ================= SCREENS ================= */
+
+/* Home */
+function renderHome(){
+  const sectors = LANG==="ar" ? SECTORS_AR : SECTORS_EN;
+  const projects = [
+    {id:"p1", title:LANG==="ar"?"نظام ري ذكي بالطاقة الشمسية":"Solar-powered smart irrigation", sector:1, ready:3},
+    {id:"p2", title:LANG==="ar"?"منصة تشخيص طبي بالذكاء الاصطناعي":"AI medical diagnostics platform", sector:0, ready:2},
+    {id:"p3", title:LANG==="ar"?"أتمتة خطوط الإنتاج الصغيرة":"Small-scale production line automation", sector:3, ready:4}
+  ];
+  const filtered = projects.filter(p => S.filters.sector == null || p.sector === S.filters.sector);
+
+  return `
+    <section class="hero">
+      <div>
+        <h1>${LANG==="ar" ? 'مشروع تخرجك، <em>شركتك الناشئة</em>.' : 'Your graduation project, <em>your startup</em>.'}</h1>
+        <p>${t("heroSub")}</p>
+        <div class="actions">
+          <button class="btn btn-primary" data-go="register">${t("register")}</button>
+          <button class="btn btn-secondary" data-go="pitch">${t("browse")}</button>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        ${heroArt()}
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">${t("howItWorks")}</h2>
+      <p class="section-sub">${t("howSub")}</p>
+      <div class="steps">
+        <div class="step-card"><div class="n">1</div><h4>${t("s1")}</h4><p>${t("s1d")}</p></div>
+        <div class="step-card"><div class="n">2</div><h4>${t("s2")}</h4><p>${t("s2d")}</p></div>
+        <div class="step-card"><div class="n">3</div><h4>${t("s3")}</h4><p>${t("s3d")}</p></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="between">
+        <div>
+          <h3>${t("sectorsTitle")}</h3>
+          <p>${t("sectorsSub")}</p>
+        </div>
+        <button class="btn btn-ghost sm" data-reset-filters>${t("resetFilters")}</button>
+      </div>
+      <div class="sectors" style="margin-top:16px">
+        ${sectors.map((s,i)=>`
+          <button class="sector ${S.filters.sector===i?'active':''}" data-sector="${i}">${s}</button>
+        `).join("")}
+      </div>
+    </section>
+
+    <section>
+      <div class="between">
+        <h2 class="section-title">${t("recentProjects")}</h2>
+        <button class="btn btn-ghost sm" data-go="pitch">${t("pitchBoard")} →</button>
+      </div>
+      <div class="grid cols-3" style="margin-top:8px">
+        ${filtered.length ? filtered.map(p => projectCard(p)).join("") : emptyState(t("filterEmpty"), true)}
+      </div>
+    </section>
+
+    <section class="investor-band">
+      <div>
+        <h2>${t("forInvestors")}</h2>
+        <p>${t("forInvestorsSub")}</p>
+      </div>
+      <button class="btn btn-accent" data-go="register" data-role="investor">${t("joinInvestor")}</button>
+    </section>
+  `;
+}
+
+function heroArt(){
+  return `
+  <svg width="320" height="260" viewBox="0 0 320 260" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0F5C63"/><stop offset="1" stop-color="#157A83"/>
+      </linearGradient>
+      <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#F2A93B"/><stop offset="1" stop-color="#F2C26B"/>
+      </linearGradient>
+    </defs>
+    <circle cx="160" cy="130" r="110" fill="#EAF3F4"/>
+    <circle cx="160" cy="130" r="80" fill="#F4F9FA"/>
+    <path d="M160 40 L200 120 L160 105 L120 120 Z" fill="url(#g1)"/>
+    <rect x="140" y="130" width="40" height="80" rx="10" fill="url(#g1)" opacity=".15"/>
+    <circle cx="160" cy="130" r="6" fill="#F2A93B"/>
+    <path d="M120 200 Q160 230 200 200" stroke="url(#g2)" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <circle cx="90" cy="80" r="6" fill="#F2A93B"/>
+    <circle cx="240" cy="90" r="4" fill="#0F5C63"/>
+    <circle cx="230" cy="200" r="5" fill="#0F5C63" opacity=".6"/>
+    <circle cx="80" cy="190" r="4" fill="#F2A93B" opacity=".8"/>
+  </svg>`;
+}
+
+function projectCard(p){
+  const sector = (LANG==="ar"?SECTORS_AR:SECTORS_EN)[p.sector];
+  const readyLabels = LANG==="ar" ? ["مبكر","نموذج","جاهز","مكتمل"] : ["Early","Prototype","Ready","Complete"];
+  return `
+    <article class="project-card">
+      <div class="between">
+        <span class="chip">${sector}</span>
+        <span class="badge published">${readyLabels[p.ready]}</span>
+      </div>
+      <h4>${p.title}</h4>
+      <p class="muted small">${LANG==="ar"?"نظام متكامل قابل للتطبيق في السوق المصري.":"A market-ready integrated system for the Egyptian market."}</p>
+      <div class="row">
+        <button class="btn btn-primary sm" data-go="pitchItem" data-id="${p.id}">${t("viewProject")}</button>
+        <button class="btn btn-ghost sm" data-toast="info" data-toast-msg="${LANG==="ar"?"تم إرسال طلب الاجتماع":"Meeting request sent"}">${t("requestMeeting")}</button>
+      </div>
+    </article>`;
+}
+
+function emptyState(msg, withReset){
+  return `
+    <div class="empty">
+      <svg width="120" height="90" viewBox="0 0 120 90" aria-hidden="true">
+        <rect x="20" y="30" width="80" height="50" rx="10" fill="#EAF3F4"/>
+        <rect x="30" y="20" width="60" height="14" rx="7" fill="#0F5C63" opacity=".2"/>
+        <circle cx="60" cy="55" r="12" fill="#0F5C63" opacity=".3"/>
+      </svg>
+      <h3>${msg}</h3>
+      ${withReset ? `<button class="btn btn-secondary sm" data-reset-filters style="margin-top:12px">${t("resetFilters")}</button>` : ""}
+    </div>`;
+}
+
+/* Register */
+function renderRegister(){
+  return `
+  <section class="card" style="max-width:640px;margin:0 auto">
+    <h1 class="section-title">${t("registerTitle")}</h1>
+    <p class="section-sub">${t("registerNote")}</p>
+    <form onsubmit="handleRegister(event)">
+      <div class="field">
+        <label for="name">${t("name")}</label>
+        <input id="name" required autocomplete="name" placeholder="${LANG==="ar"?"سارة أحمد":"Sara Ahmed"}">
+      </div>
+      <div class="field">
+        <label for="email">${t("email")}</label>
+        <input id="email" type="email" required autocomplete="email" placeholder="you@example.com" dir="ltr">
+      </div>
+      <div class="field">
+        <label for="pwd">${t("password")}</label>
+        <input id="pwd" type="password" required minlength="8" autocomplete="new-password">
+        <div class="hint" id="pwdHint">${LANG==="ar"?"8 أحرف على الأقل":"At least 8 characters"}</div>
+      </div>
+      <div class="field">
+        <label for="uni">${t("university")}</label>
+        <input id="uni" required>
+      </div>
+      <div class="field">
+        <label for="fac">${t("faculty")}</label>
+        <input id="fac" required>
+      </div>
+      <div class="field">
+        <label for="yr">${t("gradYear")}</label>
+        <select id="yr" required>
+          ${[2024,2025,2026,2027,2028].map(y=>`<option>${y}</option>`).join("")}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary block">${t("registerBtn")}</button>
+      <p class="center small muted" style="margin-top:12px">
+        ${t("alreadyAccount")} <a href="#" data-go="login">${t("loginBtn")}</a>
+      </p>
+    </form>
+  </section>`;
+}
+function handleRegister(e){
+  e.preventDefault();
+  S.role = "student";
+  save();
+  toast("success", LANG==="ar"?"تم إنشاء الحساب بنجاح":"Account created successfully");
+  go("dashboard");
+}
+
+function renderLogin(){
+  return `
+  <section class="card" style="max-width:480px;margin:0 auto">
+    <h1 class="section-title">${t("loginTitle")}</h1>
+    <form onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="em">${t("email")}</label>
+        <input id="em" type="email" required dir="ltr">
+      </div>
+      <div class="field">
+        <label for="pw">${t("password")}</label>
+        <input id="pw" type="password" required>
+      </div>
+      <button class="btn btn-primary block" type="submit">${t("loginBtn")}</button>
+      <p class="center small muted" style="margin-top:12px">
+        ${t("noAccount")} <a href="#" data-go="register">${t("registerBtn")}</a>
+      </p>
+    </form>
+    <div class="card tint" style="margin-top:20px">
+      <p class="small"><strong>${t("demo")}:</strong> ${LANG==="ar"?"اختر دورًا لتجربة الواجهة:":"Pick a role to explore:"}</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-secondary sm" onclick="setRole('student')">👩‍🎓 ${LANG==="ar"?"طالب":"Student"}</button>
+        <button class="btn btn-secondary sm" onclick="setRole('mentor')">🧑‍🏫 ${LANG==="ar"?"مرشد":"Mentor"}</button>
+        <button class="btn btn-secondary sm" onclick="setRole('reviewer')">🔎 ${LANG==="ar"?"مراجع":"Reviewer"}</button>
+        <button class="btn btn-secondary sm" onclick="setRole('investor')">💼 ${LANG==="ar"?"مستثمر":"Investor"}</button>
+        <button class="btn btn-secondary sm" onclick="setRole('admin')">⚙️ ${LANG==="ar"?"إدارة":"Admin"}</button>
+      </div>
+    </div>
+  </section>`;
+}
+function handleLogin(e){ e.preventDefault(); go("dashboard"); }
+
+/* Student Dashboard */
+function renderDashboard(){
+  const p = S.project;
+  const stageIdx = STAGES.indexOf(statusToStage(p.status));
+  const next = nextStepFor(p.status);
+  return `
+    <section>
+      <h1 class="section-title">${t("welcomeBack")}</h1>
+      <p class="section-sub">${t("projectLabel")}: <strong>${p.title}</strong></p>
+    </section>
+
+    <section>${stepperHTML(stageIdx)}</section>
+
+    <section class="card amber">
+      <div class="between">
+        <div>
+          <h3>${t("nextStep")}</h3>
+          <p style="color:var(--ink-900)">${t(next.title)}</p>
+        </div>
+        ${next.cta ? `<button class="btn btn-primary" data-go="${next.cta}">${t(next.ctaLabel)}</button>` : ""}
+      </div>
+    </section>
+
+    <section class="grid cols-2">
+      <div class="card">
+        <div class="between" style="margin-bottom:12px">
+          <h3>${t("mentorMsgs")}</h3>
+          <span class="chip">${t("mentor")}: ${t("seedMentor")}</span>
+        </div>
+        ${S.messages.slice(-2).map(m=>`<div class="bubble ${m.from==='me'?'me':'them'}" style="margin-bottom:8px">${m.text}<span class="time">${m.time}</span></div>`).join("")}
+        <button class="btn btn-secondary sm" data-go="mentor">${t("openChat")}</button>
+      </div>
+
+      <div class="card">
+        <h3>${t("yourDocs")}</h3>
+        <div style="margin-top:8px">
+          ${p.docs.map(d=>`
+            <div class="file">
+              <div class="fico">${d.name.split('.').pop().toUpperCase()}</div>
+              <div style="flex:1">
+                <div class="fname">${d.name}</div>
+                <div class="fsize">${d.size} · ${t("doc"+cap(d.vis))}</div>
+              </div>
+              <span class="badge ${d.vis==='public'?'published':d.vis==='nda'?'review':'draft'}">${t("doc"+cap(d.vis))}</span>
+            </div>
+          `).join("")}
+        </div>
+        <button class="btn btn-ghost sm" data-go="upload">${t("addDoc")}</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="between" style="margin-bottom:12px">
+        <h3>${t("timeline")}</h3>
+        <span class="badge ${p.status}">${t("status"+cap(p.status))}</span>
+      </div>
+      ${timelineHTML(p.status)}
+    </section>
+  `;
+}
+
+function statusToStage(status){
+  if (["draft","submitted"].includes(status)) return "upload";
+  if (["review","changes","rejected"].includes(status)) return "screening";
+  if (["approved","mentoring"].includes(status)) return "mentoring";
+  return "pitch";
+}
+
+function nextStepFor(status){
+  switch(status){
+    case "draft":    return {title:"nextComplete", cta:"upload", ctaLabel:"project"};
+    case "submitted":return {title:"nextWait", cta:null};
+    case "review":   return {title:"nextWait", cta:null};
+    case "changes":  return {title:"nextAddDoc", cta:"upload", ctaLabel:"addDoc"};
+    case "approved": return {title:"nextMentor", cta:"mentor", ctaLabel:"openChat"};
+    case "mentoring":return {title:"nextPublish", cta:"project", ctaLabel:"publish"};
+    case "published":return {title:"nextShare", cta:"pitch", ctaLabel:"pitchBoard"};
+    default: return {title:"nextWait", cta:null};
+  }
+}
+
+function stepperHTML(currentIdx){
+  return `
+    <div class="stepper" role="list" aria-label="${t("stageCurrent")}">
+      ${STAGES.map((s,i)=>`
+        <div class="step ${i<currentIdx?'done':''} ${i===currentIdx?'current':''}" role="listitem">
+          <div class="bar"><span></span></div>
+          <div class="label"><span class="num">${i+1}</span>${t(s)}</div>
+        </div>
+      `).join("")}
+    </div>`;
+}
+
+function timelineHTML(status){
+  const order = ["submitted","review","mentor","published"];
+  const idx = {
+    draft:-1, submitted:0, review:1, changes:1, rejected:1,
+    approved:2, mentoring:2, published:3, funded:3
+  }[status] ?? -1;
+  const evts = [
+    {k:"submittedEvt", d:LANG==="ar"?"12 مارس":"Mar 12"},
+    {k:"reviewedEvt",  d:LANG==="ar"?"13 مارس":"Mar 13"},
+    {k:"mentorEvt",    d:LANG==="ar"?"20 مارس":"Mar 20"},
+    {k:"publishedEvt", d:LANG==="ar"?"2 أبريل":"Apr 2"}
+  ];
+  return `<div class="timeline">${evts.map((e,i)=>`
+    <div class="tl-item ${i<=idx?'':'pending'}">
+      <h4>${t(e.k)}</h4>
+      <p>${i<=idx ? e.d : (LANG==="ar"?"بانتظار…":"Pending…")}</p>
+    </div>`).join("")}</div>`;
+}
+
+/* Upload wizard */
+let uploadStep = 0;
+function renderUpload(){
+  const p = S.project;
+  const steps = ["uploadStep1","uploadStep2","uploadStep3"];
+  let body = "";
+  if (uploadStep === 0){
+    const sectors = LANG==="ar"?SECTORS_AR:SECTORS_EN;
+    const readyLabels = LANG==="ar" ? ["مبكر","نموذج أولي","جاهز للسوق","مكتمل"] : ["Early","Prototype","Market-ready","Complete"];
+    body = `
+      <div class="field">
+        <label for="ptitle">${t("title")}</label>
+        <input id="ptitle" value="${escapeHtml(p.title)}" oninput="S.project.title=this.value;save()">
+      </div>
+      <div class="field">
+        <label for="psector">${t("sector")}</label>
+        <select id="psector" onchange="S.project.sector=+this.value;save()">
+          ${sectors.map((s,i)=>`<option value="${i}" ${p.sector===i?'selected':''}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field">
+        <label for="preadiness">${t("readiness")}</label>
+        <input id="preadiness" type="range" min="0" max="3" step="1" value="${p.readiness}"
+          oninput="S.project.readiness=+this.value;document.getElementById('readyLbl').textContent=this.dataset.labels.split('|')[this.value];save()"
+          data-labels="${readyLabels.join('|')}" style="padding:0;min-height:auto">
+        <div class="hint" id="readyLbl">${readyLabels[p.readiness]}</div>
+      </div>
+      <div class="field">
+        <label for="psum">${t("summary")}</label>
+        <textarea id="psum" oninput="S.project.summary=this.value;save()">${escapeHtml(p.summary)}</textarea>
+      </div>`;
+  } else if (uploadStep === 1){
+    body = `
+      <div class="dropzone" id="dropzone">
+        <div style="font-size:36px">📎</div>
+        <p><strong>${t("dropzone")}</strong></p>
+        <p class="small">${t("dropzoneHint")}</p>
+        <input type="file" id="fileInput" hidden multiple accept=".pdf,.docx">
+      </div>
+      <div id="fileList" style="margin-top:16px">
+        ${S.project.docs.map((d,i)=>`
+          <div class="file">
+            <div class="fico">${d.name.split('.').pop().toUpperCase()}</div>
+            <div style="flex:1">
+              <div class="fname">${d.name}</div>
+              <div class="fsize">${d.size}</div>
+            </div>
+            <select onchange="S.project.docs[${i}].vis=this.value;save()">
+              <option value="public" ${d.vis==='public'?'selected':''}>${t("visPublic")}</option>
+              <option value="private" ${d.vis==='private'?'selected':''}>${t("visPrivate")}</option>
+              <option value="nda" ${d.vis==='nda'?'selected':''}>${t("visNda")}</option>
+            </select>
+            <button class="icon-btn" onclick="removeDoc(${i})" aria-label="${t("delete")}">🗑</button>
+          </div>`).join("")}
+      </div>`;
+  } else {
+    const sector = (LANG==="ar"?SECTORS_AR:SECTORS_EN)[S.project.sector];
+    const readyLabels = LANG==="ar" ? ["مبكر","نموذج أولي","جاهز للسوق","مكتمل"] : ["Early","Prototype","Market-ready","Complete"];
+    body = `
+      <div class="card tint">
+        <h3>${S.project.title}</h3>
+        <p class="small muted">${sector} · ${readyLabels[S.project.readiness]}</p>
+        <p style="margin-top:12px">${S.project.summary}</p>
+      </div>
+      <div style="margin-top:16px">
+        <h4 style="margin-bottom:8px">${t("yourDocs")}</h4>
+        ${S.project.docs.map(d=>`<div class="file"><div class="fico">${d.name.split('.').pop().toUpperCase()}</div><div style="flex:1"><div class="fname">${d.name}</div><div class="fsize">${d.size} · ${t("doc"+cap(d.vis))}</div></div></div>`).join("")}
+      </div>`;
+  }
+
+  return `
+    <section>
+      <h1 class="section-title">${t("project")} — ${t("uploadStep"+(uploadStep+1))}</h1>
+      <p class="section-sub">${t("upload")} · ${uploadStep+1} / 3</p>
+    </section>
+    <section>${stepperHTML(0)}</section>
+    <section class="card">
+      <div class="tabs" style="margin-bottom:20px">
+        ${steps.map((s,i)=>`<button class="${i===uploadStep?'active':''}" onclick="uploadStep=${i};render()">${t(s)}</button>`).join("")}
+      </div>
+      <form onsubmit="handleUploadNext(event)">
+        ${body}
+        <div class="row" style="margin-top:20px">
+          ${uploadStep>0 ? `<button type="button" class="btn btn-secondary" onclick="uploadStep--;render()">${t("back")}</button>` : ""}
+          ${uploadStep<2
+            ? `<button type="submit" class="btn btn-primary">${t("next")}</button>`
+            : `<button type="submit" class="btn btn-primary">${t("submit")}</button>`
+          }
+        </div>
+      </form>
+    </section>`;
+}
+function handleUploadNext(e){
+  e.preventDefault();
+  if (uploadStep < 2){ uploadStep++; render(); return; }
+  showConfirm(t("confirmTitle"), t("confirmBody"), ()=>{
+    S.project.status = "submitted";
+    S.stage = 0;
+    save();
+    toast("success", LANG==="ar"?"تم إرسال مشروعك ✓":"Project submitted ✓");
+    go("project");
+  });
+}
+function removeDoc(i){
+  S.project.docs.splice(i,1);
+  save(); render();
+}
+
+/* Project page */
+function renderProject(){
+  const p = S.project;
+  const canPublish = ["approved","mentoring"].includes(p.status);
+  return `
+    <section class="between">
+      <div>
+        <h1 class="section-title">${p.title}</h1>
+        <span class="badge ${p.status}">${t("status"+cap(p.status))}</span>
+      </div>
+      ${canPublish ? `<button class="btn btn-accent" onclick="publishProject()">${t("publish")}</button>` : ""}
+    </section>
+
+    <section>${stepperHTML(STAGES.indexOf(statusToStage(p.status)))}</section>
+
+    <section class="grid cols-2">
+      <div class="card">
+        <h3>${t("summary")}</h3>
+        <p style="margin-top:8px">${p.summary}</p>
+      </div>
+      <div class="card">
+        <h3>${t("timeline")}</h3>
+        ${timelineHTML(p.status)}
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>${t("yourDocs")}</h3>
+      <div style="margin-top:8px">
+        ${p.docs.map(d=>`<div class="file"><div class="fico">${d.name.split('.').pop().toUpperCase()}</div><div style="flex:1"><div class="fname">${d.name}</div><div class="fsize">${d.size}</div></div><span class="badge ${d.vis==='public'?'published':d.vis==='nda'?'review':'draft'}">${t("doc"+cap(d.vis))}</span></div>`).join("")}
+      </div>
+    </section>
+  `;
+}
+function publishProject(){
+  S.project.status = "published";
+  save();
+  toast("success", LANG==="ar"?"تم نشر مشروعك ✓":"Project published ✓");
+  addNotif(LANG==="ar"?"مشروعك منشور الآن":"Your project is live", LANG==="ar"?"يمكن للمستثمرين رؤيته":"Visible to investors");
+  go("pitch");
+}
+
+/* Reviewer */
+function renderReview(){
+  const rows = [
+    {id:"p1", name:S.project.title, sector:S.project.sector, date:LANG==="ar"?"12 مارس":"Mar 12", status:"review"},
+    {id:"p2", name:LANG==="ar"?"منصة تشخيص طبي بالذكاء الاصطناعي":"AI medical diagnostics platform", sector:0, date:LANG==="ar"?"11 مارس":"Mar 11", status:"review"},
+    {id:"p3", name:LANG==="ar"?"أتمتة خطوط الإنتاج الصغيرة":"Small-scale production line automation", sector:3, date:LANG==="ar"?"10 مارس":"Mar 10", status:"changes"}
+  ];
+  const sectors = LANG==="ar"?SECTORS_AR:SECTORS_EN;
+  return `
+    <section>
+      <h1 class="section-title">${t("reviewerQueue")}</h1>
+      <p class="section-sub">${rows.length} ${LANG==="ar"?"مشاريع بانتظار المراجعة":"projects awaiting review"}</p>
+    </section>
+    <section class="card" style="padding:0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead>
+          <tr style="background:var(--teal-100);text-align:start">
+            <th style="padding:12px;text-align:start">${t("projectCol")}</th>
+            <th style="padding:12px;text-align:start">${t("sectorCol")}</th>
+            <th style="padding:12px;text-align:start">${t("dateCol")}</th>
+            <th style="padding:12px;text-align:start">${t("statusCol")}</th>
+            <th style="padding:12px;text-align:start">${t("actionsCol")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr style="border-top:1px solid var(--line-200)">
+              <td style="padding:12px;font-weight:600">${r.name}</td>
+              <td style="padding:12px"><span class="chip">${sectors[r.sector]}</span></td>
+              <td style="padding:12px" class="muted">${r.date}</td>
+              <td style="padding:12px"><span class="badge ${r.status}">${t("status"+cap(r.status))}</span></td>
+              <td style="padding:12px"><button class="btn btn-primary sm" data-go="reviewItem" data-id="${r.id}">${t("reviewBtn")}</button></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </section>`;
+}
+
+function renderReviewItem(){
+  return `
+    <section>
+      <button class="btn btn-ghost sm" data-go="review">← ${t("back")}</button>
+      <h1 class="section-title">${t("review")} — ${S.project.title}</h1>
+    </section>
+    <section class="grid cols-2">
+      <div class="card">
+        <h3>${t("publicSummary")}</h3>
+        <p style="margin-top:8px">${S.project.summary}</p>
+        <h3 style="margin-top:20px">${t("yourDocs")}</h3>
+        ${S.project.docs.map(d=>`<div class="file"><div class="fico">${d.name.split('.').pop().toUpperCase()}</div><div style="flex:1"><div class="fname">${d.name}</div><div class="fsize">${d.size}</div></div></div>`).join("")}
+      </div>
+      <div class="card">
+        <h3>${t("feedback")} <span style="color:var(--bad)">*</span></h3>
+        <div class="field" id="fbField">
+          <textarea id="fb" placeholder="${LANG==="ar"?"اكتب ملاحظاتك…":"Write your feedback…"}"></textarea>
+        </div>
+        <div class="stack" style="gap:8px">
+          <label style="display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line-200);border-radius:12px;cursor:pointer">
+            <input type="radio" name="dec" value="approved" checked> <span class="badge approved">${t("approve")}</span>
+          </label>
+          <label style="display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line-200);border-radius:12px;cursor:pointer">
+            <input type="radio" name="dec" value="changes"> <span class="badge changes">${t("requestChanges")}</span>
+          </label>
+          <label style="display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line-200);border-radius:12px;cursor:pointer">
+            <input type="radio" name="dec" value="rejected"> <span class="badge rejected">${t("reject")}</span>
+          </label>
+        </div>
+        <button class="btn btn-primary block" style="margin-top:16px" onclick="submitReview()">${t("approveBtn")}</button>
+      </div>
+    </section>`;
+}
+function submitReview(){
+  const fb = document.getElementById("fb");
+  const fbField = document.getElementById("fbField");
+  if (!fb.value.trim()){
+    fbField.classList.add("error");
+    let err = fbField.querySelector(".err");
+    if (!err){
+      err = document.createElement("div");
+      err.className = "err";
+      err.innerHTML = "⚠ " + (LANG==="ar"?"الملاحظات مطلوبة":"Feedback is required");
+      fbField.appendChild(err);
+    }
+    fb.focus();
+    return;
+  }
+  fbField.classList.remove("error");
+  const dec = document.querySelector('input[name="dec"]:checked').value;
+  S.project.status = dec;
+  if (dec === "approved"){
+    addNotif(LANG==="ar"?"تم قبول مشروعك":"Your project was approved", LANG==="ar"?"سيتم تعيين مرشد قريبًا":"A mentor will be assigned soon");
+    toast("success", LANG==="ar"?"تم إرسال القرار ✓":"Decision submitted ✓");
+    // auto-assign a mentor after a beat (demo)
+    setTimeout(()=>{
+      S.project.status = "mentoring";
+      addNotif(LANG==="ar"?"تم تعيين مرشد":"Mentor assigned", LANG==="ar"?"م. أحمد فؤاد":"Ahmed Fouad");
+      save(); render();
+    }, 1400);
+  } else {
+    toast("info", LANG==="ar"?"تم إرسال الملاحظات للطالب":"Feedback sent to the student");
+  }
+  save();
+  go("review");
+}
+
+/* Mentor workspace */
+function renderMentor(){
+  return `
+    <section>
+      <h1 class="section-title">${LANG==="ar"?"مساحة المرشد":"Mentor workspace"}</h1>
+      <p class="section-sub">${LANG==="ar"?"الفريق المُعيَّن: سارة أحمد":"Assigned team: Sara Ahmed"}</p>
+    </section>
+
+    <section class="grid cols-2">
+      <div class="card">
+        <div class="between" style="margin-bottom:12px">
+          <h3>${S.project.title}</h3>
+          <span class="badge ${S.project.status}">${t("status"+cap(S.project.status))}</span>
+        </div>
+        <p class="small muted">${S.project.summary}</p>
+        <div class="row" style="margin-top:12px">
+          <button class="btn btn-primary sm" onclick="acceptTeam()">${t("accept")}</button>
+          <button class="btn btn-secondary sm" onclick="declineTeam()">${t("decline")}</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:12px">${t("messages")}</h3>
+        <div class="chat" id="chat">
+          ${S.messages.map(m=>`<div class="bubble ${m.from==='me'?'me':'them'}">${m.text}<span class="time">${m.time}</span></div>`).join("")}
+        </div>
+        <form class="chat-input" onsubmit="sendMsg(event)">
+          <input id="msgInput" placeholder="${t("sendMsg")}" autocomplete="off">
+          <button class="btn btn-primary" type="submit">${t("send")}</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>${LANG==="ar"?"ملاحظات منظّمة":"Structured feedback"}</h3>
+      <div class="grid cols-2" style="margin-top:12px">
+        <div class="field"><label>${LANG==="ar"?"نقاط القوة":"Strengths"}</label><textarea></textarea></div>
+        <div class="field"><label>${LANG==="ar"?"نقاط التحسين":"Improvements"}</label><textarea></textarea></div>
+        <div class="field"><label>${LANG==="ar"?"الخطوات التالية":"Next steps"}</label><textarea></textarea></div>
+        <div class="field"><label>${LANG==="ar"?"تقييم الجاهزية (1-5)":"Readiness score (1-5)"}</label><input type="number" min="1" max="5" value="3"></div>
+      </div>
+      <div class="between">
+        <span class="autosave"><span class="pulse"></span>${t("autosaveSaving")}</span>
+        <button class="btn btn-primary" onclick="toast('success','${LANG==="ar"?"تم إرسال الملاحظات":"Feedback sent"}')">${t("send")}</button>
+      </div>
+    </section>`;
+}
+function sendMsg(e){
+  e.preventDefault();
+  const inp = document.getElementById("msgInput");
+  const text = inp.value.trim();
+  if (!text) return;
+  const now = new Date();
+  S.messages.push({from:"me", text, time: `${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`});
+  inp.value = "";
+  save();
+  const chat = document.getElementById("chat");
+  const b = document.createElement("div");
+  b.className = "bubble me";
+  b.innerHTML = `${text}<span class="time">${S.messages.at(-1).time}</span>`;
+  chat.appendChild(b);
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(()=>{
+    S.messages.push({from:"them", text: LANG==="ar"?"تمام، سأراجع وأرد.":"Got it, I'll review and reply.", time:"—"});
+    save();
+    const r = document.createElement("div");
+    r.className = "bubble them";
+    r.innerHTML = `${S.messages.at(-1).text}<span class="time">—</span>`;
+    chat.appendChild(r);
+    chat.scrollTop = chat.scrollHeight;
+  }, 900);
+}
+function acceptTeam(){ toast("success", LANG==="ar"?"تم قبول الفريق ✓":"Team accepted ✓"); }
+function declineTeam(){ toast("info", LANG==="ar"?"تم رفض الطلب":"Request declined"); }
+
+/* Canvas */
+function renderCanvas(){
+  const blocks = LANG==="ar" ? S.canvas.ar : S.canvas.en;
+  return `
+    <section class="between">
+      <div>
+        <h1 class="section-title">${t("canvas")}</h1>
+        <p class="section-sub">${S.project.title}</p>
+      </div>
+      <span class="autosave saved" id="canvasSave"><span class="pulse"></span>${t("autosaveSaved")}</span>
+    </section>
+    <section class="grid cols-3">
+      ${blocks.map((b,i)=>`
+        <div class="card">
+          <h4 style="margin-bottom:8px;font-size:14px;color:var(--teal-700)">${b}</h4>
+          <textarea data-block="${i}" oninput="canvasSave(${i}, this.value)" style="width:100%;min-height:80px;border:1px solid var(--line-200);border-radius:10px;padding:8px;resize:vertical">${escapeHtml(S.canvasData[i]||"")}</textarea>
+        </div>`).join("")}
+    </section>`;
+}
+function canvasSave(i, val){
+  S.canvasData[i] = val;
+  save();
+  const el = document.getElementById("canvasSave");
+  el.classList.remove("saved");
+  el.querySelector("span:last-child").textContent = t("autosaveSaving");
+  clearTimeout(window.__cs);
+  window.__cs = setTimeout(()=>{
+    el.classList.add("saved");
+    el.querySelector("span:last-child").textContent = t("autosaveSaved");
+  }, 600);
+}
+
+/* Pitch board */
+function renderPitch(){
+  const sectors = LANG==="ar"?SECTORS_AR:SECTORS_EN;
+  const projects = [
+    {id:"p1", title:LANG==="ar"?"نظام ري ذكي بالطاقة الشمسية":"Solar-powered smart irrigation", sector:1, ready:2},
+    {id:"p2", title:LANG==="ar"?"منصة تشخيص طبي بالذكاء الاصطناعي":"AI medical diagnostics platform", sector:0, ready:1},
+    {id:"p3", title:LANG==="ar"?"أتمتة خطوط الإنتاج الصغيرة":"Small-scale production line automation", sector:3, ready:3},
+    {id:"p4", title:LANG==="ar"?"شبكة استشعار للمباني الذكية":"IoT sensor network for smart buildings", sector:2, ready:2}
+  ];
+  const f = S.filters;
+  const list = projects.filter(p =>
+    (f.sector == null || p.sector === f.sector) &&
+    (f.ready == null || p.ready === f.ready) &&
+    (!f.q || p.title.toLowerCase().includes(f.q.toLowerCase()))
+  );
+  return `
+    <section>
+      <h1 class="section-title">${t("pitchBoard")}</h1>
+      <p class="section-sub">${LANG==="ar"?"اكتشف مشاريع جاهزة للاستثمار.":"Discover investment-ready projects."}</p>
+    </section>
+    <section class="card">
+      <div class="field" style="margin-bottom:12px">
+        <input id="q" placeholder="${t("searchPlaceholder")}" value="${escapeHtml(f.q)}" oninput="S.filters.q=this.value;save();render()" style="min-height:44px;padding:10px 14px;border:1.5px solid var(--line-300);border-radius:12px">
+      </div>
+      <div class="between" style="gap:20px;flex-wrap:wrap">
+        <div>
+          <p class="small muted" style="margin-bottom:6px">${t("searchBySector")}</p>
+          <div class="sectors">
+            <button class="sector ${f.sector===null?'active':''}" onclick="S.filters.sector=null;save();render()">${t("all")}</button>
+            ${sectors.map((s,i)=>`<button class="sector ${f.sector===i?'active':''}" onclick="S.filters.sector=${i};save();render()">${s}</button>`).join("")}
+          </div>
+        </div>
+        <div>
+          <p class="small muted" style="margin-bottom:6px">${t("searchByReady")}</p>
+          <div class="sectors">
+            <button class="sector ${f.ready===null?'active':''}" onclick="S.filters.ready=null;save();render()">${t("all")}</button>
+            ${[0,1,2,3].map(i=>`<button class="sector ${f.ready===i?'active':''}" onclick="S.filters.ready=${i};save();render()">${t("ready"+(i+1))}</button>`).join("")}
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="grid cols-3">
+      ${list.length ? list.map(projectCard).join("") : emptyState(t("emptyPitch"), true)}
+    </section>`;
+}
+
+/* Investor project page */
+function renderPitchItem(){
+  const p = S.project;
+  return `
+    <section>
+      <button class="btn btn-ghost sm" data-go="pitch">← ${t("pitchBoard")}</button>
+      <h1 class="section-title">${p.title}</h1>
+      <span class="badge published">${t("statusPublished")}</span>
+    </section>
+    <section class="grid cols-2">
+      <div class="card">
+        <h3>${t("publicSummary")}</h3>
+        <p style="margin-top:8px">${p.summary}</p>
+        <div class="row" style="margin-top:12px">
+          <span class="chip">${(LANG==="ar"?SECTORS_AR:SECTORS_EN)[p.sector]}</span>
+          <span class="badge approved">${t("ready3")}</span>
+        </div>
+      </div>
+      <div class="locked">
+        <div class="blur">
+          <div class="file"><div class="fico">PDF</div><div style="flex:1"><div class="fname">technical-doc.pdf</div></div></div>
+          <div class="file" style="margin-top:8px"><div class="fico">PDF</div><div style="flex:1"><div class="fname">financials.pdf</div></div></div>
+        </div>
+        <div class="overlay">
+          <div>
+            <div style="font-size:36px;margin-bottom:8px">🔒</div>
+            <h3>${t("fullDocs")}</h3>
+            <p style="margin:8px auto 16px">${t("ndaLocked")}</p>
+            <label style="display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:16px">
+              <input type="checkbox" id="nda" onchange="document.getElementById('ndaBtns').disabled=!this.checked">
+              <span>${t("ndaCheck")}</span>
+            </label>
+            <div class="row" style="justify-content:center">
+              <button id="ndaBtns" class="btn btn-primary" disabled onclick="requestMeeting()">${t("requestMeeting")}</button>
+              <button class="btn btn-secondary" disabled onclick="toast('info','${LANG==="ar"?"تم إرسال طلب التمويل":"Funding request sent"}')">${t("requestFunding")}</button>
+              <button class="btn btn-secondary" disabled onclick="toast('info','${LANG==="ar"?"تم إرسال طلب الاحتضان":"Incubation request sent"}')">${t("requestIncubation")}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`;
+}
+function requestMeeting(){
+  S.meetings.push({
+    id:"m"+Date.now(), project:S.project.title,
+    investor:LANG==="ar"?"شركة النيل للاستثمار":"Nile Ventures",
+    status:"pending", date: new Date().toLocaleDateString(LANG==="ar"?"ar-EG":"en-GB")
+  });
+  save();
+  toast("success", LANG==="ar"?"تم إرسال طلب الاجتماع ✓":"Meeting request sent ✓");
+  addNotif(LANG==="ar"?"طلب اجتماع جديد":"New meeting request", LANG==="ar"?"شركة النيل للاستثمار":"Nile Ventures");
+}
+
+/* Meetings */
+function renderMeetings(){
+  const filter = S.params?.filter || "all";
+  const list = S.meetings.filter(m => filter==="all" || m.status===filter);
+  return `
+    <section>
+      <h1 class="section-title">${t("meetingReqs")}</h1>
+    </section>
+    <section class="card">
+      <div class="tabs">
+        ${["all","pending","accepted","declined"].map(f=>`
+          <button class="${filter===f?'active':''}" onclick="go('meetings',{filter:'${f}'})">${t(f==="all"?"all":f==="pending"?"pendingTab":f==="accepted"?"acceptedTab":"declinedTab")}</button>
+        `).join("")}
+      </div>
+    </section>
+    <section class="stack">
+      ${list.length ? list.map(m=>`
+        <div class="card between">
+          <div>
+            <h3>${m.project}</h3>
+            <p class="small muted">${m.investor} · ${m.date}</p>
+          </div>
+          <div class="row">
+            <span class="badge ${m.status}">${t(m.status)}</span>
+            ${m.status==="pending" ? `
+              <button class="btn btn-primary sm" onclick="updateMeeting('${m.id}','accepted')">${t("accept")}</button>
+              <button class="btn btn-secondary sm" onclick="updateMeeting('${m.id}','declined')">${t("decline")}</button>
+            ` : ""}
+          </div>
+        </div>
+      `).join("") : emptyState(LANG==="ar"?"لا توجد طلبات بعد.":"No requests yet.")}
+    </section>`;
+}
+function updateMeeting(id, status){
+  const m = S.meetings.find(x=>x.id===id);
+  if (m){ m.status = status; save(); toast("success", LANG==="ar"?"تم التحديث":"Updated"); render(); }
+}
+
+/* Admin */
+function renderAdmin(){
+  const users = [
+    {n:"سارة أحمد", e:"sara@grad.up", r:"student", u:"جامعة القاهرة"},
+    {n:"م. أحمد فؤاد", e:"ahmed@grad.up", r:"mentor", u:"—"},
+    {n:"د. منى رشدي", e:"mona@grad.up", r:"reviewer", u:"—"},
+    {n:"شركة النيل", e:"invest@nile.vc", r:"investor", u:"—"}
+  ];
+  const roleLabels = LANG==="ar"
+    ? {student:"طالب", mentor:"مرشد", reviewer:"مراجع", investor:"مستثمر", admin:"إدارة"}
+    : {student:"Student", mentor:"Mentor", reviewer:"Reviewer", investor:"Investor", admin:"Admin"};
+  return `
+    <section>
+      <h1 class="section-title">${t("admin")}</h1>
+    </section>
+    <section class="tabs">
+      <button class="active">${t("adminUsers")}</button>
+      <button onclick="toast('info','${LANG==="ar"?"قادم قريبًا":"Coming soon"}')">${t("adminSectors")}</button>
+      <button onclick="toast('info','${LANG==="ar"?"قادم قريبًا":"Coming soon"}')">${t("adminMentors")}</button>
+      <button onclick="toast('info','${LANG==="ar"?"قادم قريبًا":"Coming soon"}')">${t("adminEvents")}</button>
+    </section>
+    <section class="card" style="padding:0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead>
+          <tr style="background:var(--teal-100)">
+            <th style="padding:12px;text-align:start">${t("name")}</th>
+            <th style="padding:12px;text-align:start">${t("email")}</th>
+            <th style="padding:12px;text-align:start">${LANG==="ar"?"الدور":"Role"}</th>
+            <th style="padding:12px;text-align:start">${t("university")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(u=>`
+            <tr style="border-top:1px solid var(--line-200)">
+              <td style="padding:12px;font-weight:600">${u.n}</td>
+              <td style="padding:12px" class="muted" dir="ltr">${u.e}</td>
+              <td style="padding:12px"><span class="chip">${roleLabels[u.r]}</span></td>
+              <td style="padding:12px" class="muted">${u.u}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </section>`;
+}
+
+/* ---------- Helpers ---------- */
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function escapeHtml(s=""){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function toast(type, msg){
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  const ico = {success:"✓", error:"✕", info:"i", warn:"!"}[type] || "i";
+  el.innerHTML = `<span class="ico">${ico}</span><span>${msg}</span>`;
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(()=>{ el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = "all .25s var(--ease)"; }, 3600);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+function addNotif(title, sub){
+  S.notifications.unshift({title, sub, unread:true});
+  save();
+  render();
+}
+
+function showConfirm(title, body, onYes){
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+        <h3 id="mt">${title}</h3>
+        <p>${body}</p>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="closeModal()">${t("confirmNo")}</button>
+          <button class="btn btn-primary" id="confirmYes">${t("confirmYes")}</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById("confirmYes").onclick = () => { closeModal(); onYes(); };
+}
+function closeModal(){ document.getElementById("modalRoot").innerHTML = ""; }
+
+function openNotifications(){
+  const root = document.getElementById("drawerRoot");
+  const items = S.notifications;
+  root.innerHTML = `
+    <div class="modal-bg" style="padding:0;place-items:stretch end;background:rgba(27,31,35,.35)" onclick="if(event.target===this)closeDrawer()">
+      <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="nt">
+        <header>
+          <h3 id="nt" style="font-size:18px">${t("notifTitle")}</h3>
+          <div class="row">
+            <button class="btn btn-ghost sm" onclick="markAllRead()">${t("markRead")}</button>
+            <button class="icon-btn" onclick="closeDrawer()" aria-label="${t("cancel")}">✕</button>
+          </div>
+        </header>
+        <div class="list">
+          ${items.length ? items.map((n,i)=>`
+            <div class="notif ${n.unread?'unread':''}">
+              <div class="dot" style="${n.unread?'':'opacity:.25'}"></div>
+              <div style="flex:1">
+                <div class="title">${n.title}</div>
+                <div class="sub">${n.sub}</div>
+              </div>
+            </div>`).join("") : `<div class="empty">${t("emptyNotif")}</div>`}
+        </div>
+      </aside>
+    </div>`;
+}
+function closeDrawer(){ document.getElementById("drawerRoot").innerHTML = ""; }
+function markAllRead(){ S.notifications.forEach(n=>n.unread=false); save(); openNotifications(); render(); }
+
+function resetDemo(){
+  localStorage.removeItem("gradup.state.v1");
+  S = defaultState();
+  save();
+  toast("info", LANG==="ar"?"تم إعادة تعيين العرض":"Demo reset");
+  go("home");
+}
+
+/* ---------- Language ---------- */
+function setLang(lang){
+  LANG = lang;
+  localStorage.setItem("gradup.lang", lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("active", b.dataset.lang === lang));
+  render();
+}
+
+/* ---------- Event delegation ---------- */
+function attachHandlers(){
+  // data-go
+  document.querySelectorAll("[data-go]").forEach(el => {
+    el.onclick = (e) => {
+      e.preventDefault();
+      const role = el.dataset.role;
+      if (role) S.role = role;
+      go(el.dataset.go, el.dataset.id ? {id: el.dataset.id} : {});
+    };
+  });
+  // data-sector (home filters)
+  document.querySelectorAll("[data-sector]").forEach(el => {
+    el.onclick = () => {
+      const i = +el.dataset.sector;
+      S.filters.sector = S.filters.sector === i ? null : i;
+      save(); render();
+    };
+  });
+  // reset filters
+  document.querySelectorAll("[data-reset-filters]").forEach(el => {
+    el.onclick = () => { S.filters = {q:"", sector:null, ready:null}; save(); render(); };
+  });
+  // toast triggers
+  document.querySelectorAll("[data-toast]").forEach(el => {
+    el.onclick = () => toast(el.dataset.toast, el.dataset.toastMsg || "OK");
+  });
+  // dropzone
+  const dz = document.getElementById("dropzone");
+  if (dz){
+    dz.onclick = () => document.getElementById("fileInput").click();
+    dz.ondragover = (e) => { e.preventDefault(); dz.classList.add("dragover"); };
+    dz.ondragleave = () => dz.classList.remove("dragover");
+    dz.ondrop = (e) => {
+      e.preventDefault(); dz.classList.remove("dragover");
+      addFiles(e.dataTransfer.files);
+    };
+    document.getElementById("fileInput").onchange = (e) => addFiles(e.target.files);
+  }
+  // chat scroll
+  const chat = document.getElementById("chat");
+  if (chat) chat.scrollTop = chat.scrollHeight;
+}
+
+function addFiles(files){
+  [...files].forEach(f => {
+    const ok = /\.(pdf|docx)$/i.test(f.name);
+    if (!ok){ toast("error", LANG==="ar"?"نوع الملف غير مدعوم":"Unsupported file type"); return; }
+    if (f.size > 25 * 1024 * 1024){ toast("error", LANG==="ar"?"الحجم الأقصى 25 ميجابايت":"Max size is 25 MB"); return; }
+    S.project.docs.push({
+      name: f.name,
+      size: (f.size/1024/1024).toFixed(1) + " MB",
+      vis: "private"
+    });
+  });
+  save(); render();
+}
+
+/* ---------- Top bar handlers ---------- */
+document.getElementById("bellBtn").onclick = openNotifications;
+document.getElementById("userBtn").onclick = () => {
+  showConfirm(t("demo"), LANG==="ar"?"اختر دورًا جديدًا أو أعد تعيين العرض.":"Switch role or reset demo.", ()=>{});
+  // Append role switcher inside modal
+  setTimeout(()=>{
+    const m = document.querySelector(".modal p");
+    if (!m) return;
+    m.insertAdjacentHTML("afterend", `
+      <div class="row" style="margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-secondary sm" onclick="closeModal();setRole('student')">👩‍🎓 ${t("dashboard")}</button>
+        <button class="btn btn-secondary sm" onclick="closeModal();setRole('mentor')">🧑‍🏫 ${t("mentoring")}</button>
+        <button class="btn btn-secondary sm" onclick="closeModal();setRole('reviewer')">🔎 ${t("review")}</button>
+        <button class="btn btn-secondary sm" onclick="closeModal();setRole('investor')">💼 ${t("pitchBoard")}</button>
+        <button class="btn btn-secondary sm" onclick="closeModal();setRole('admin')">⚙️ ${t("admin")}</button>
+      </div>`);
+  }, 10);
+};
+document.querySelectorAll(".lang button").forEach(b => {
+  b.onclick = () => setLang(b.dataset.lang);
+});
+
+/* Topbar scroll shadow */
+window.addEventListener("scroll", () => {
+  document.getElementById("topbar").classList.toggle("scrolled", window.scrollY > 8);
+}, {passive:true});
+
+/* ESC closes overlays */
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape"){ closeModal(); closeDrawer(); }
+});
+
+/* ---------- Init ---------- */
+document.documentElement.lang = LANG;
+document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("active", b.dataset.lang === LANG));
+
+// If user is returning to an authed route but not registered, send them to dashboard anyway (demo).
+render();
+</script>
+</body>
+</html>
